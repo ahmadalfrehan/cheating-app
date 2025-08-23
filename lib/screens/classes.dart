@@ -4,14 +4,25 @@ import 'package:get/get.dart';
 import '../getx/controller.dart';
 import '../widgets/customdrawer.dart';
 
-class Classes extends StatelessWidget {
+class Classes extends StatefulWidget {
   Classes({super.key});
 
+  @override
+  State<Classes> createState() => _ClassesState();
+}
+
+class _ClassesState extends State<Classes> {
   final controller = Get.put(AppController());
 
   @override
+  void initState() {
+    controller.getHome();
+    super.initState();
+  }
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
+
       drawer: CustomDrawer(onItemTap: (v) {}),
       appBar: AppBar(
         title: Text("Classes"),

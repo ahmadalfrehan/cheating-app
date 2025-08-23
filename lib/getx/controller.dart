@@ -25,7 +25,7 @@ class AppController extends GetxController {
   TextEditingController title = TextEditingController();
   TextEditingController description = TextEditingController();
   TextEditingController periodH = TextEditingController();
-  TextEditingController periodT = TextEditingController();
+  TextEditingController periodM = TextEditingController();
 
   final RxBool isExamOn = false.obs;
   var classesResponse =
@@ -41,7 +41,7 @@ class AppController extends GetxController {
   @override
   onInit() {
     super.onInit();
-    token.value = box.read('auth_token');
+    token.value = box.read('auth_token')??"";
     getHome();
   }
 
@@ -118,30 +118,42 @@ class AppController extends GetxController {
   }
 
   createExam() async {
-    try {
-      isLoading.value = true;
-      print(Uri.parse('${API_URL}create-exam'));
-      final response = await http.post(
-        Uri.parse('${API_URL}create-exam'),
-        body: {
-          "classroom_id": classroomId.value,
-          "title": title.text,
-          "period": period.text,
-          "description": description.text,
-        },
-        headers: {'Accept': 'application/json'},
-      );
-      print(response.body);
+    // try {
+    isLoading.value = true;
+    print({
+      "classroom_id": classroomId.value.toString(),
+      "title": title.text,
+      "period": periodM.text,
+      "description": description.text,
+    });
+    print(Uri.parse('${API_URL}create-exam'));
+    final response = await http.post(
+      Uri.parse('${API_URL}create-exam'),
+      body: {
+        "classroom_id": classroomId.value.toString(),
+        "title": title.text,
+        "period": periodM.text,
+        "description": description.text,
+      },
+      headers: {
+        'Accept': 'application/json',
+
+        'Authorization': 'Bearer ${token.value}',
+      },
+    );
+    print(response.body);
       print(response.statusCode);
       final data = json.decode(response.body);
-      // if(respo)
       print(data);
-
-      isLoading.value = false;
-    } catch (error) {
-      isLoading.value = false;
-      print(error);
+    if (data['status'] == true) {
+      Get.toNamed('/ext');
     }
+
+    isLoading.value = false;
+    // } catch (error) {
+    //   isLoading.value = false;
+    //   print(error);
+    // }
   }
 
   void sendResults() {

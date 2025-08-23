@@ -28,7 +28,11 @@ class Start extends StatelessWidget {
             ),
             SizedBox(height: 15),
             TextField(
-              controller: controller.period,
+              controller: controller.periodM,
+              inputFormatters: [
+                FilteringTextInputFormatter.digitsOnly,
+                LengthLimitingTextInputFormatter(3),
+              ],
               decoration: const InputDecoration(
                 labelText: "Period",
                 border: OutlineInputBorder(),
@@ -43,24 +47,33 @@ class Start extends StatelessWidget {
               ),
             ),
             SizedBox(height: 15),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: const [
-                SizedBox(
-                  width: 80,
-                  child: TimeInputField(hintText: "HH", maxValue: 23),
-                ),
-                SizedBox(width: 12),
-                SizedBox(
-                  width: 80,
-                  child: TimeInputField(hintText: "MM", maxValue: 59),
-                ),
-              ],
-            ),
+            // Text('Period'),
+            // Row(
+            //   mainAxisAlignment: MainAxisAlignment.center,
+            //   children: [
+            //     SizedBox(
+            //       width: 80,
+            //       child: TimeInputField(controller: controller.periodH
+            //           , hintText: "HH", maxValue: 23),
+            //     ),
+            //     SizedBox(width: 12),
+            //     SizedBox(
+            //       width: 80,
+            //       child: TimeInputField(controller:
+            //       controller.periodM, hintText: "MM", maxValue: 59),
+            //     ),
+            //   ],
+            // ),
             Spacer(),
-            ElevatedButton(onPressed: () async {
+            // Obx(() =>
+            // controller.isLoading.value
+            //     ? CircularProgressIndicator()
+            //     :
+            ElevatedButton(onPressed: () {
               controller.createExam();
             }, child: Text('Start Exam')),
+
+            // )
           ],
         ),
       ),
@@ -70,11 +83,13 @@ class Start extends StatelessWidget {
 
 class TimeInputField extends StatelessWidget {
   final String hintText;
+  final TextEditingController controller;
   final int maxValue; // 23 for hours, 59 for minutes
 
   const TimeInputField({
     super.key,
     required this.hintText,
+    required this.controller,
     required this.maxValue,
   });
 
@@ -87,6 +102,7 @@ class TimeInputField extends StatelessWidget {
         LengthLimitingTextInputFormatter(2), // max 2 digits
         _MaxValueTextInputFormatter(maxValue),
       ],
+      controller: controller,
       decoration: InputDecoration(
         hintText: hintText,
         contentPadding: const EdgeInsets.symmetric(
