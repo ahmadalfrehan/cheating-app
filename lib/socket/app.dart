@@ -265,12 +265,35 @@ class _MonitorScreenState extends State<MonitorScreen> {
                         ),
                         SizedBox(width: 10),
                         ElevatedButton(
-                          onPressed:
-                          webSocketService.isConnected
-                              ? () => webSocketService.disconnect()
-                              : () => webSocketService.connect(
-                            _serverController.text,
-                          ),
+                          onPressed: () {
+                            if (webSocketService.isConnected) {
+                              webSocketService.disconnect();
+                              videoService.disconnect();
+                              // alerts
+                            } else {
+                              webSocketService.connect(_serverController.text);
+                              videoService.connect(_serverController.text);
+                            }
+
+                            // if (videoService.isConnected) {
+                            //   videoService.disconnect();
+                            // } else {
+
+                            // }
+                          },
+
+                          // onPressed:
+                          //   webSocketService.isConnected
+                          //       ? () => webSocketService.disconnect()
+                          //       : () => webSocketService.connect(
+                          //         _serverController.text,
+                          //       ),
+                          //   // ..connect('127.0.0.1:8000')
+                          //   videoService.isConnected
+                          //       ? () => videoService.disconnect()
+                          //       : () => videoService.connect(
+                          //         _serverController.text,
+                          //       );
                           onLongPress: () {
                             Get.to(
                                   () => PostExamReviewScreen(

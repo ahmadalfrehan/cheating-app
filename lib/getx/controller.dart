@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:io';
 
 import 'package:cheating_detection/models/alerts.dart';
 import 'package:flutter/cupertino.dart';
@@ -156,14 +157,43 @@ class AppController extends GetxController {
     // }
   }
 
-  void sendResults() {
+
+// Convert file to base64
+//   Future<String> fileToBase64(String filePath) async {
+//     final bytes = await File(filePath).readAsBytes();
+//     return base64Encode(bytes);
+//   }
+  void sendResults() async {
     final results = alerts.value;
-    // for (int i = 0; i < alerts.value.length; i++) {
-    //   results.add({
-    //     "screenshot": alerts[i].screenshotUrl,
-    //     "description": alerts[i].description,
-    //   });
-    // }
+
+    // final screenshotBase64 = await fileToBase64("path/to/screenshot.png");
+
+
+    final response = await http.post(Uri.parse('${API_URL}store-alerts')
+       , body: jsonEncode({
+        "exam_id": "3",
+        "alerts": [
+          {
+            "title": "test",
+            "risk": "high",
+            "description": "testttt",
+            "student_id": "ID3",
+            "time": "2025-08-23 14:45:00",
+            // "screenshot":await File('')
+          }
+        ]
+      }),
+      headers: {
+        'Accept': 'application/json',
+        'Content-Type': 'application/json', // <-- IMPORTANT
+        'Authorization': 'Bearer ${token.value}',
+      },
+    );
+    print(response.body);
+    print(response.statusCode);
+    final data = json.decode(response.body);
+    print(data);
+
 
     print("Sending results: $results");
     for (var o in alerts.value) {

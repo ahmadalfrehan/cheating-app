@@ -65,15 +65,14 @@ class Start extends StatelessWidget {
             //   ],
             // ),
             Spacer(),
-            // Obx(() =>
-            // controller.isLoading.value
-            //     ? CircularProgressIndicator()
-            //     :
+            Obx(() =>
+            controller.isLoading.value
+                ? CircularProgressIndicator()
+                :
             ElevatedButton(onPressed: () {
               controller.createExam();
             }, child: Text('Start Exam')),
-
-            // )
+            )
           ],
         ),
       ),
