@@ -227,9 +227,7 @@ class MonitorScreen extends StatefulWidget {
 }
 
 class _MonitorScreenState extends State<MonitorScreen> {
-  final TextEditingController _serverController = TextEditingController(
-    text: '127.0.0.1:8000',
-  ); // Replace with your server IP
+
 
   final controller = Get.put(AppController());
 
@@ -238,8 +236,9 @@ class _MonitorScreenState extends State<MonitorScreen> {
     final videoService = Provider.of<VideoStreamService>(context);
     return Scaffold(
       appBar: AppBar(
-        title: Text('Cheating Detection Monitor'),
-        backgroundColor: Colors.blueGrey,
+        title: Text('Cheating Detection Monitor',
+            style: TextStyle(color: Colors.white)),
+        backgroundColor: Colors.blue,
       ),
       body: Consumer<WebSocketService>(
         builder: (context, webSocketService, child) {
@@ -255,7 +254,7 @@ class _MonitorScreenState extends State<MonitorScreen> {
                       children: [
                         Expanded(
                           child: TextField(
-                            controller: _serverController,
+                            controller: controller.serverController,
                             decoration: InputDecoration(
                               labelText: 'Server Address',
                               hintText: 'ip:port (e.g., 192.168.1.100:8000)',
@@ -269,10 +268,18 @@ class _MonitorScreenState extends State<MonitorScreen> {
                             if (webSocketService.isConnected) {
                               webSocketService.disconnect();
                               videoService.disconnect();
+                              Get.to(
+                                    () =>
+                                    PostExamReviewScreen(
+                                      alertScreenshots: webSocketService.alerts,
+                                    ),
+                              );
                               // alerts
                             } else {
-                              webSocketService.connect(_serverController.text);
-                              videoService.connect(_serverController.text);
+                              webSocketService.connect(
+                                  controller.serverController.text);
+                              videoService.connect(
+                                  controller.serverController.text);
                             }
 
                             // if (videoService.isConnected) {
@@ -282,18 +289,6 @@ class _MonitorScreenState extends State<MonitorScreen> {
                             // }
                           },
 
-                          // onPressed:
-                          //   webSocketService.isConnected
-                          //       ? () => webSocketService.disconnect()
-                          //       : () => webSocketService.connect(
-                          //         _serverController.text,
-                          //       ),
-                          //   // ..connect('127.0.0.1:8000')
-                          //   videoService.isConnected
-                          //       ? () => videoService.disconnect()
-                          //       : () => videoService.connect(
-                          //         _serverController.text,
-                          //       );
                           onLongPress: () {
                             Get.to(
                                   () => PostExamReviewScreen(
@@ -360,6 +355,8 @@ class _MonitorScreenState extends State<MonitorScreen> {
                         ? Image.memory(
                       videoService.currentFrame!,
                       gaplessPlayback: true,
+                      filterQuality: FilterQuality.low, // faster decode
+                      isAntiAlias: false,
                     )
                         : Center(child: Text("Waiting for video...")),
                   ],
@@ -408,7 +405,7 @@ class _MonitorScreenState extends State<MonitorScreen> {
                     Padding(
                       padding: EdgeInsets.all(16),
                       child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        // mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
                           Text(
                             'Alerts (${webSocketService.alerts.length})',
@@ -417,6 +414,15 @@ class _MonitorScreenState extends State<MonitorScreen> {
                               fontWeight: FontWeight.bold,
                             ),
                           ),
+                          Spacer(),
+                          if (webSocketService.alerts.isNotEmpty)
+                            TextButton(
+                              onPressed: () {
+                                showAlertsModal(context, webSocketService);
+                              },
+                              child: Text('See All'),
+                            ),
+
                           if (webSocketService.alerts.isNotEmpty)
                             TextButton(
                               onPressed: () => webSocketService.clearAlerts(),
@@ -459,6 +465,92 @@ class _MonitorScreenState extends State<MonitorScreen> {
       ),
     );
   }
+}
+
+void showAlertsModal(BuildContext context, WebSocketService webSocketService) {
+  showModalBottomSheet(
+    context: context,
+    isScrollControlled: true, // allow full screen
+    backgroundColor: Colors.transparent,
+    builder: (context) {
+      return DraggableScrollableSheet(
+          expand: true,
+          builder: (context, scrollController) {
+            return
+              Consumer<WebSocketService>(
+                builder: (context, webSocketService, child) {
+                  return
+
+                    Container(
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.vertical(
+                            top: Radius.circular(20)),
+                      ),
+                      child: Column(
+                        children: [
+
+                          Container(
+                            width: 40,
+                            height: 5,
+                            margin: EdgeInsets.symmetric(vertical: 10),
+                            decoration: BoxDecoration(
+                              color: Colors.grey[300],
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                          ),
+                          Padding(
+                            padding: EdgeInsets.symmetric(horizontal: 16),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Text(
+                                  'Alerts (${webSocketService.alerts.length})',
+                                  style: TextStyle(
+                                    fontSize: 18,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                                if (webSocketService.alerts.isNotEmpty)
+                                  TextButton(
+                                    onPressed: () =>
+                                        webSocketService.clearAlerts(),
+                                    child: Text('Clear All'),
+                                  ),
+                              ],
+                            ),
+                          ),
+                          Expanded(
+                            child: webSocketService.alerts.isEmpty
+                                ? Center(
+                              child: Text(
+                                webSocketService.isConnected
+                                    ? 'No alerts yet'
+                                    : 'Connect to server to see alerts',
+                                style: TextStyle(color: Colors.grey),
+                              ),
+                            )
+                                : ListView.builder(
+                              controller: scrollController,
+                              itemCount: webSocketService.alerts.length,
+                              reverse: true,
+                              itemBuilder: (context, index) {
+                                final alert = webSocketService
+                                    .alerts[webSocketService.alerts.length - 1 -
+                                    index];
+                                return AlertCard(alert: alert);
+                              },
+                            ),
+                          ),
+                        ],
+                      ),
+                    );
+                },
+              );
+          }
+          );
+    },
+  );
 }
 
 class VideoStreamService extends ChangeNotifier {
@@ -565,8 +657,8 @@ class VideoStreamService extends ChangeNotifier {
   Timer? _frameRequestTimer;
 
   void _requestFrame() {
-    _frameRequestTimer?.cancel(); // prevent multiple timers
-    _frameRequestTimer = Timer.periodic(const Duration(milliseconds: 50), (
+    _frameRequestTimer?.cancel();
+    _frameRequestTimer = Timer.periodic(const Duration(milliseconds: 100), (
         timer,
         ) {
       if (_isConnected && _videoChannel != null) {

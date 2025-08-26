@@ -2,6 +2,7 @@
 class Alert {
   String pid;
   String reason;
+  String risk;
   String decision;
   String? description;
   String screenshotUrl;
@@ -10,6 +11,8 @@ class Alert {
   Alert({
     required this.pid,
     required this.reason,
+    required this.risk,
+
     required this.decision,
     required this.screenshotUrl,
     required this.timestamp,
@@ -23,6 +26,7 @@ class Alert {
       decision: json['decision'] ?? '',
       screenshotUrl: json['screenshot_url'] ?? '',
       description: json['description'] ?? '',
+      risk: json['risk'] ?? '',
       timestamp: (json['timestamp'] ?? 0).toDouble(),
     );
   }

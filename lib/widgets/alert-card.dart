@@ -8,9 +8,10 @@ import '../models/alerts.dart';
 class AlertCard extends StatelessWidget {
   final Alert alert;
   final bool? description;
+  final String? serverUrl;
   final int? index;
 
-   AlertCard({Key? key, required this.alert, this.description,this.index})
+   AlertCard({Key? key, required this.alert, this.description,this.index,this.serverUrl})
     : super(key: key);
 
   Color _getAlertColor(String decision) {
@@ -61,10 +62,15 @@ class AlertCard extends StatelessWidget {
             title: Text(
               '${alert.pid} - ${alert.reason.replaceAll('_', ' ').toUpperCase()}',
               style: TextStyle(fontWeight: FontWeight.bold),
+
             ),
             subtitle: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                Text(
+                  '${alert.risk}'==''?'':'Risk ${alert.risk}',
+                  style: TextStyle(fontSize: 12, color: Colors.red),
+                ),
                 Text(
                   alert.decision,
                   style: TextStyle(
@@ -115,6 +121,8 @@ class AlertCard extends StatelessWidget {
   }
 
   void _showScreenshot(BuildContext context, String url) {
+    String finalUrl = 'http://${controller.serverController.text}/$url';
+    print(finalUrl);
     showDialog(
       context: context,
       builder: (BuildContext context) {
@@ -125,7 +133,7 @@ class AlertCard extends StatelessWidget {
               AppBar(
                 title: Text('Alert Screenshot'),
                 automaticallyImplyLeading: false,
-                actions: [
+                 actions: [
                   IconButton(
                     icon: Icon(Icons.close),
                     onPressed: () => Navigator.of(context).pop(),
@@ -134,7 +142,7 @@ class AlertCard extends StatelessWidget {
               ),
               Expanded(
                 child: Image.network(
-                  url,
+                  finalUrl,
                   loadingBuilder: (context, child, progress) {
                     if (progress == null) return child;
                     return Center(child: CircularProgressIndicator());

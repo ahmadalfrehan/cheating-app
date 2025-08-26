@@ -32,7 +32,7 @@ class _ClassesState extends State<Classes> {
             onTap: () {
               controller.getHome();
             },
-            child: Text(' 8 Active  '),
+            child: Obx(()=> Text('${controller.classesResponse.value.data.classes.length} Classes    ')),
           ),
         ],
       ),

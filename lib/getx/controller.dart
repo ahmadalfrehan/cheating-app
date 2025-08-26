@@ -1,7 +1,10 @@
 import 'dart:convert';
-import 'dart:io';
+
+// import 'package:dio/dio.dart'as dio;
 
 import 'package:cheating_detection/models/alerts.dart';
+import 'package:dio/dio.dart' as di;
+import 'package:dio/dio.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
@@ -29,6 +32,10 @@ class AppController extends GetxController {
   TextEditingController periodM = TextEditingController();
 
   final RxBool isExamOn = false.obs;
+  final RxString examId = '1'.obs;
+  final TextEditingController serverController = TextEditingController(
+    text: '127.0.0.1:8000',
+  ); // Replace with your server IP
   var classesResponse =
       ClassesResponse(
         status: false,
@@ -119,7 +126,7 @@ class AppController extends GetxController {
   }
 
   createExam() async {
-    // try {
+    try {
     isLoading.value = true;
     print({
       "classroom_id": classroomId.value.toString(),
@@ -146,43 +153,57 @@ class AppController extends GetxController {
       print(response.statusCode);
       final data = json.decode(response.body);
       print(data);
+    examId.value = data['data']['id'].toString();
     if (data['status'] == true) {
       Get.toNamed('/ext');
     }
 
     isLoading.value = false;
-    // } catch (error) {
-    //   isLoading.value = false;
-    //   print(error);
-    // }
+    } catch (error) {
+      isLoading.value = false;
+      print(error);
+    }
   }
 
+  Future<void> uploadFromLocalServer(String localUrl) async {
 
-// Convert file to base64
-//   Future<String> fileToBase64(String filePath) async {
-//     final bytes = await File(filePath).readAsBytes();
-//     return base64Encode(bytes);
-//   }
+  }
+
+  getImage(url) async {
+    final localResponse = await http.get(Uri.parse(url));
+    if (localResponse.statusCode != 200) {
+      print("Failed to fetch image from local server");
+    }
+    final screenshotBase64 = base64Encode(localResponse.bodyBytes);
+
+    return screenshotBase64;
+  }
   void sendResults() async {
     final results = alerts.value;
 
-    // final screenshotBase64 = await fileToBase64("path/to/screenshot.png");
+    // Uint8List imageBytes = localResponse.bodyBytes;
 
 
-    final response = await http.post(Uri.parse('${API_URL}store-alerts')
-       , body: jsonEncode({
-        "exam_id": "3",
-        "alerts": [
-          {
-            "title": "test",
-            "risk": "high",
-            "description": "testttt",
-            "student_id": "ID3",
-            "time": "2025-08-23 14:45:00",
-            // "screenshot":await File('')
-          }
-        ]
-      }),
+    // 3. Build JSON request
+    final body = jsonEncode({
+      "exam_id": examId.value,
+      "alerts":
+      [
+        {
+          "title": "test",
+          "risk": "high",
+          "description": "testttt",
+          "student_id": "ID3",
+          "time": "2025-08-23 14:45:00",
+          "screenshot": await getImage(
+              'http://127.0.0.1:8000/alerts/alert_ID_1_hand_1.jpg')
+        }
+      ]
+    });
+
+
+    final response = await http.post(
+      Uri.parse('${API_URL}store-alerts'), body: body,
       headers: {
         'Accept': 'application/json',
         'Content-Type': 'application/json', // <-- IMPORTANT
@@ -206,4 +227,88 @@ class AppController extends GetxController {
 
     GetSnackBar(title: "Results sent successfully!");
   }
+
+
+  final dio = Dio();
+
+  convertScreensAlerts() async {
+    List<Map<String, dynamic>> alertsData = [];
+
+    for (var alert in alerts) {
+      String alertScreenShot = 'http://${serverController.text}/${alert
+          .screenshotUrl}';
+      print(alertScreenShot);
+
+      final localResponse = await dio.get<List<int>>(
+        alertScreenShot,
+        options: Options(responseType: ResponseType.bytes),
+      );
+      final screenshotBase64 = base64Encode(localResponse.data!);
+
+      alertsData.add({
+        "title": alert.reason ?? '',
+        "risk": alert.risk == '' ? 'low' : alert.risk,
+        "description": alert.description ?? '',
+        "student_id": alert.pid,
+        "time": alert.timestamp,
+        "screenshot": screenshotBase64,
+      });
+    }
+    return alertsData;
+  }
+
+  Future<void> sendResultsMultipart() async {
+    // 1. Fetch image from local server
+    // try {
+    isLoading.value = true;
+    //
+    // String url = 'http://127.0.0.1:8000/alerts/alert_ID_1_hand_1.jpg';
+    // final localResponse = await dio.get<List<int>>(
+    //   url,
+    //   options: Options(responseType: ResponseType.bytes),
+    // );
+    List<Map<String, dynamic>> alertsData = [];
+
+
+    alertsData = await convertScreensAlerts();
+    // 2. Wrap in MultipartFile
+    // final screenshotFile = di.MultipartFile.fromBytes(
+    //   localResponse.data!,
+    //   filename: "screenshot.png",
+    // );
+
+    // 3. Build FormData
+    final formData = di.FormData.fromMap({
+      "exam_id": examId.value.toString(),
+      'alerts': alertsData
+    });
+
+    // 4. Send request
+    final response = await dio.post(
+      "${API_URL}store-alerts",
+      data: formData,
+      options: Options(headers: {
+        'Accept': 'application/json',
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer ${token.value}',
+      },
+        validateStatus: (status) {
+          return status != null && status < 500; // don't throw on 422
+        },),
+    );
+
+    print(response.statusCode);
+    print(response.data);
+
+    GetSnackBar(title: "Results sent successfully!");
+    Get.toNamed('/classes');
+    isLoading.value = false;
+  }
+// catch (error) {
+//   isLoading.value = false;
+//
+//   GetSnackBar(title: "$error");
+// }
+// }
+
 }

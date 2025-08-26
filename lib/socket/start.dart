@@ -13,7 +13,7 @@ class Start extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         title: Text('Cheating Detection Monitor'),
-        backgroundColor: Colors.blueGrey,
+        backgroundColor: Colors.blue,
       ),
       body: Container(
         padding: EdgeInsets.all(30),
@@ -71,7 +71,13 @@ class Start extends StatelessWidget {
                 :
             ElevatedButton(onPressed: () {
               controller.createExam();
-            }, child: Text('Start Exam')),
+            },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.blue,),
+                child: Text(
+                  'Start Exam', style: TextStyle(color: Colors.white),)
+
+            ),
             )
           ],
         ),
