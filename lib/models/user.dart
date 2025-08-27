@@ -1,6 +1,6 @@
 import 'dart:convert';
 
-/// Main response model
+
 class ClassesResponse {
   final bool status;
   final String message;
@@ -26,14 +26,14 @@ class ClassesResponse {
     return {'status': status, 'message': message, 'data': data.toJson()};
   }
 
-  /// Helper to parse from raw string
+
   static ClassesResponse fromRawJson(String str) =>
       ClassesResponse.fromJson(json.decode(str));
 
   String toRawJson() => json.encode(toJson());
 }
 
-/// Data object that contains counts and class list
+
 class ClassesData {
   final int numberOfActiveClasses;
   final List<ClassItem> classes;
@@ -58,7 +58,7 @@ class ClassesData {
   }
 }
 
-/// Individual class item
+
 class ClassItem {
   final int id;
   final String name;

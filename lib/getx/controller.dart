@@ -38,7 +38,7 @@ class AppController extends GetxController {
   final RxString examId = '1'.obs;
   final TextEditingController serverController = TextEditingController(
     text: '192.168.0.0:8000',
-  ); // Replace with your server IP
+  );
   var classesResponse =
       ClassesResponse(
         status: false,
@@ -98,15 +98,15 @@ class AppController extends GetxController {
       print(response.statusCode);
       final data = json.decode(response.body);
       token.value = data['data']['token'];
-      // response.body['data']['token'];
+
       print(token.value);
       final userName = data['data']["user"]["name"];
       final userEmail = data['data']["user"]["email"];
 
-// Save to storage
+
       UserCache.saveUser(userName, userEmail);
 
-// Later you can access anywhere:
+
       print(UserCache.name);
       print(UserCache.email);
 
@@ -378,7 +378,7 @@ class AppController extends GetxController {
             options: Options(responseType: ResponseType.bytes),
           );
 
-          // Check if we actually got image data
+
           if (localResponse.data != null &&
               localResponse.data!.isNotEmpty &&
               localResponse.statusCode == 200) {
@@ -403,7 +403,7 @@ class AppController extends GetxController {
         screenshotFile = null;
       }
 
-      // Store alert data - only include screenshot_file if we have a valid one
+
       Map<String, dynamic> alertData = {
         "title": alert.reason ?? '',
         "risk": alert.risk == '' ? 'low' : alert.risk,
@@ -412,7 +412,7 @@ class AppController extends GetxController {
         "time": alert.dateTime.toLocal().toString().split('.')[0],
       };
 
-      // Only add screenshot_file if it's valid
+
       if (screenshotFile != null) {
         alertData["screenshot_file"] = screenshotFile;
       }

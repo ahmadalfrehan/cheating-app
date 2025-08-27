@@ -29,17 +29,17 @@ class ExamMonitoringDashboard extends StatefulWidget {
 class _ExamMonitoringDashboardState extends State<ExamMonitoringDashboard>
     with TickerProviderStateMixin {
 
-  // Animation controllers
+
   late AnimationController _pulseController;
   late AnimationController _alertController;
   late AnimationController _fadeController;
 
-  // Animations
+
   late Animation<double> _pulseAnimation;
   late Animation<double> _alertAnimation;
   late Animation<double> _fadeAnimation;
 
-  // State variables
+
   List<Alert> alerts = [];
   List<Student> students = [];
   Timer? _alertTimer;
@@ -51,7 +51,7 @@ class _ExamMonitoringDashboardState extends State<ExamMonitoringDashboard>
   void initState() {
     super.initState();
 
-    // Initialize animations
+
     _pulseController = AnimationController(
       duration: Duration(seconds: 2),
       vsync: this,
@@ -80,7 +80,7 @@ class _ExamMonitoringDashboardState extends State<ExamMonitoringDashboard>
       CurvedAnimation(parent: _fadeController, curve: Curves.easeIn),
     );
 
-    // Initialize data
+
     _initializeStudents();
     _startSimulation();
     _fadeController.forward();

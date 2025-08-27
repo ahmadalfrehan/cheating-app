@@ -14,7 +14,6 @@ import '../getx/controller.dart';
 import '../models/alerts.dart';
 import '../widgets/alert-card.dart';
 
-// WebSocket service
 class WebSocketService extends ChangeNotifier {
   WebSocketChannel? _channel;
   bool _isConnected = false;
@@ -192,7 +191,7 @@ class WebSocketService extends ChangeNotifier {
   }
 }
 
-// Main app
+
 class CheatingDetectionApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
@@ -220,7 +219,7 @@ class CheatingDetectionApp extends StatelessWidget {
   }
 }
 
-// Monitor screen
+
 class MonitorScreen extends StatefulWidget {
   @override
   _MonitorScreenState createState() => _MonitorScreenState();
@@ -274,7 +273,7 @@ class _MonitorScreenState extends State<MonitorScreen> {
                                       alertScreenshots: webSocketService.alerts,
                                     ),
                               );
-                              // alerts
+
                             } else {
                               webSocketService.connect(
                                   controller.serverController.text);
@@ -363,7 +362,7 @@ class _MonitorScreenState extends State<MonitorScreen> {
                 ),
               ),
 
-              // Scoreboard
+
               if (webSocketService.scoreboard.isNotEmpty)
                 Container(
                   padding: EdgeInsets.all(16),
@@ -398,7 +397,7 @@ class _MonitorScreenState extends State<MonitorScreen> {
                   ),
                 ),
 
-              // Alerts list
+
               Expanded(
                 child: Column(
                   children: [
@@ -623,7 +622,7 @@ class VideoStreamService extends ChangeNotifier {
     print('Video WebSocket error: $error');
     _isConnected = false;
     // notifyListeners();
-    if (!_disposed) notifyListeners(); // Only notify if not disposed
+    if (!_disposed) notifyListeners();
 
     // Try to reconnect after 3 seconds
     Future.delayed(const Duration(seconds: 3), () {

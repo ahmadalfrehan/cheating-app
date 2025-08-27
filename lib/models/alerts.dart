@@ -1,4 +1,4 @@
-// Alert model
+
 class Alert {
   String pid;
   String reason;
