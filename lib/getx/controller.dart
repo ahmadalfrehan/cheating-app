@@ -1,15 +1,17 @@
 import 'dart:convert';
+import 'dart:io';
 
 // import 'package:dio/dio.dart'as dio;
 
 import 'package:cheating_detection/models/alerts.dart';
 import 'package:dio/dio.dart' as di;
 import 'package:dio/dio.dart';
-import 'package:flutter/cupertino.dart';
+import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
 import 'package:http/http.dart' as http;
-
+import 'package:http_parser/http_parser.dart';
+import '../models/user-cache.dart';
 import '../models/user.dart';
 import '../screens/classes.dart';
 import '../screens/login-screen.dart';
@@ -21,6 +23,7 @@ class AppController extends GetxController {
   final TextEditingController password = TextEditingController();
   final RxBool isLogging = false.obs;
   final RxBool isLoading = false.obs;
+  final RxBool isLoadingSend = false.obs;
   final RxInt classroomId = 0.obs;
   final RxInt alertScreenshotslength = 0.obs;
   final RxList<Alert> alerts = <Alert>[].obs; //Alert.name().obs; //.obs;
@@ -34,7 +37,7 @@ class AppController extends GetxController {
   final RxBool isExamOn = false.obs;
   final RxString examId = '1'.obs;
   final TextEditingController serverController = TextEditingController(
-    text: '127.0.0.1:8000',
+    text: '192.168.0.0:8000',
   ); // Replace with your server IP
   var classesResponse =
       ClassesResponse(
@@ -97,6 +100,16 @@ class AppController extends GetxController {
       token.value = data['data']['token'];
       // response.body['data']['token'];
       print(token.value);
+      final userName = data['data']["user"]["name"];
+      final userEmail = data['data']["user"]["email"];
+
+// Save to storage
+      UserCache.saveUser(userName, userEmail);
+
+// Later you can access anywhere:
+      print(UserCache.name);
+      print(UserCache.email);
+
       saveToken(token.value);
 
       isLogging.value = false;
@@ -115,6 +128,7 @@ class AppController extends GetxController {
 
   void logout() {
     box.remove('auth_token');
+    UserCache.clearUser();
     Get.offAll(() => LoginScreen());
   }
 
@@ -181,10 +195,8 @@ class AppController extends GetxController {
   void sendResults() async {
     final results = alerts.value;
 
-    // Uint8List imageBytes = localResponse.bodyBytes;
 
 
-    // 3. Build JSON request
     final body = jsonEncode({
       "exam_id": examId.value,
       "alerts":
@@ -229,7 +241,121 @@ class AppController extends GetxController {
   }
 
 
+  String getFilenameFromUrl(String url) {
+    return url
+        .split('/')
+        .last; // e.g. alert_ID_2_head_0.jpg
+  }
+
+  //
+  // final dio = Dio();
+  //
+  // Future<String> saveToDownloads(List<int> bytes, String filename) async {
+  //   // Get the downloads directory
+  //   // final downloadsDirectory = await // DownloadsPathProvider.downloadsDirectory;
+  //   final file = File("/storage/emulated/0/download/$filename");
+  //
+  //
+  //   await file.writeAsBytes(bytes);
+  //
+  //   return file.path;
+  // }
+  // convertScreensAlerts() async {
+  //   List<Map<String, dynamic>> alertsData = [];
+  //   for (var alert in alerts) {
+  //     String alertScreenShot = 'http://${serverController.text}/${alert
+  //         .screenshotUrl}';
+  //     print(alertScreenShot);
+  //     var localResponse = null;
+  //     var screenshotFile = null;
+  //     try {
+  //       localResponse = await dio.get<List<int>>(
+  //         alertScreenShot,
+  //         options: Options(responseType: ResponseType.bytes),
+  //       );
+  //       final localPath = await saveToDownloads(
+  //         localResponse.data!,
+  //         // "${alert.pid}_${alert.timestamp}.jpg",
+  //         alertScreenShot,
+  //       );
+  //
+  //     screenshotFile = di.MultipartFile.fromBytes(
+  //       localResponse.data!,
+  //       // filename: "${alert.pid}_${alert.timestamp}.jpg",
+  //       filename: alertScreenShot,
+  //       // give each a unique name
+  //       contentType: MediaType("image", "jpeg"), //
+  //     );
+  //
+  //     } catch (error) {
+  //       print(error);
+  //     }
+  //     //
+  //
+  //     alertsData.add({
+  //       "title": alert.reason ?? '',
+  //       "risk": alert.risk == '' ? 'low' : alert.risk,
+  //       "description": alert.description,
+  //       "student_id": alert.pid,
+  //       "time": alert.dateTime.toLocal().toString().split('.')[0],
+  //       if(screenshotFile != null)
+  //         "screenshot": await screenshotFile,
+  //     });
+  //   }
+  //   return alertsData;
+  // }
+  //
+  // Future<void> sendResultsMultipart() async {
+  //
+  //   isLoading.value = true;
+  //   List<Map<String, dynamic>> alertsData = [];
+  //   alertsData = await convertScreensAlerts();
+  //   final formData = di.FormData.fromMap({
+  //     "exam_id": examId.value.toString(),
+  //     'alerts': alertsData
+  //   });
+  //   print(alertsData);
+  //   final response = await dio.post(
+  //     "${API_URL}store-alerts",
+  //     data: formData,
+  //     options: Options(headers: {
+  //       'Accept': 'application/json',
+  //       'Content-Type': 'application/json',
+  //       'Authorization': 'Bearer ${token.value}',
+  //     },
+  //       validateStatus: (status) {
+  //         return status != null && status < 500;
+  //       },),
+  //   );
+  //
+  //   print(response.statusCode);
+  //   print(response.data);
+  //
+  //   Get.showSnackbar(
+  //     GetSnackBar(
+  //       title: "Success",
+  //       message: "Results sent successfully!",
+  //       duration: Duration(seconds: 2),
+  //       snackPosition: SnackPosition.BOTTOM,
+  //       // or SnackPosition.TOP
+  //       backgroundColor: Colors.green,
+  //     ),
+  //   );
+  //   // Get.toNamed('/classes');
+  //   isLoading.value = false;
+  // }
+
+
+
+
+
   final dio = Dio();
+
+  Future<String> saveToDownloads(List<int> bytes, String filename) async {
+    final file = File("/storage/emulated/0/download/$filename");
+    await file.writeAsBytes(bytes);
+    return file.path;
+  }
 
   convertScreensAlerts() async {
     List<Map<String, dynamic>> alertsData = [];
@@ -237,78 +363,159 @@ class AppController extends GetxController {
     for (var alert in alerts) {
       String alertScreenShot = 'http://${serverController.text}/${alert
           .screenshotUrl}';
-      print(alertScreenShot);
+      print('Attempting to download: $alertScreenShot');
 
-      final localResponse = await dio.get<List<int>>(
-        alertScreenShot,
-        options: Options(responseType: ResponseType.bytes),
-      );
-      final screenshotBase64 = base64Encode(localResponse.data!);
+      di.MultipartFile? screenshotFile;
 
-      alertsData.add({
+      try {
+        final fileName = alertScreenShot
+            .split('/')
+            .last
+            .toLowerCase();
+        if (fileName.endsWith(".jpg") || fileName.endsWith(".jpeg")) {
+          var localResponse = await dio.get<List<int>>(
+            alertScreenShot,
+            options: Options(responseType: ResponseType.bytes),
+          );
+
+          // Check if we actually got image data
+          if (localResponse.data != null &&
+              localResponse.data!.isNotEmpty &&
+              localResponse.statusCode == 200) {
+            String filename = "${alert.pid}_${alert.timestamp}.jpg";
+            await saveToDownloads(localResponse.data!, filename);
+
+            screenshotFile = di.MultipartFile.fromBytes(
+              localResponse.data!,
+              filename: filename,
+              contentType: MediaType("image", "jpeg"),
+            );
+            print('✓ Screenshot downloaded successfully for ${alert.pid}');
+          } else {
+            print('✗ No valid image data received for ${alert.pid}');
+            screenshotFile = null;
+          }
+        } else {
+          print("⚠️ Skipping non-JPG screenshot: $alertScreenShot");
+        }
+      } catch (error) {
+        print('✗ Error downloading screenshot for ${alert.pid}: $error');
+        screenshotFile = null;
+      }
+
+      // Store alert data - only include screenshot_file if we have a valid one
+      Map<String, dynamic> alertData = {
         "title": alert.reason ?? '',
         "risk": alert.risk == '' ? 'low' : alert.risk,
-        "description": alert.description ?? '',
+        "description": alert.description,
         "student_id": alert.pid,
-        "time": alert.timestamp,
-        "screenshot": screenshotBase64,
-      });
+        "time": alert.dateTime.toLocal().toString().split('.')[0],
+      };
+
+      // Only add screenshot_file if it's valid
+      if (screenshotFile != null) {
+        alertData["screenshot_file"] = screenshotFile;
+      }
+
+      alertsData.add(alertData);
     }
+
     return alertsData;
   }
 
   Future<void> sendResultsMultipart() async {
-    // 1. Fetch image from local server
-    // try {
-    isLoading.value = true;
-    //
-    // String url = 'http://127.0.0.1:8000/alerts/alert_ID_1_hand_1.jpg';
-    // final localResponse = await dio.get<List<int>>(
-    //   url,
-    //   options: Options(responseType: ResponseType.bytes),
-    // );
-    List<Map<String, dynamic>> alertsData = [];
+    isLoadingSend.value = true;
+    try {
+      List<Map<String, dynamic>> alertsData = await convertScreensAlerts();
 
 
-    alertsData = await convertScreensAlerts();
-    // 2. Wrap in MultipartFile
-    // final screenshotFile = di.MultipartFile.fromBytes(
-    //   localResponse.data!,
-    //   filename: "screenshot.png",
-    // );
+      Map<String, dynamic> formDataMap = {
+        "exam_id": examId.value.toString(),
+      };
 
-    // 3. Build FormData
-    final formData = di.FormData.fromMap({
-      "exam_id": examId.value.toString(),
-      'alerts': alertsData
-    });
 
-    // 4. Send request
-    final response = await dio.post(
-      "${API_URL}store-alerts",
-      data: formData,
-      options: Options(headers: {
-        'Accept': 'application/json',
-        'Content-Type': 'application/json',
-        'Authorization': 'Bearer ${token.value}',
-      },
-        validateStatus: (status) {
-          return status != null && status < 500; // don't throw on 422
-        },),
-    );
+      for (int i = 0; i < alertsData.length; i++) {
+        var alert = alertsData[i];
 
-    print(response.statusCode);
-    print(response.data);
+        formDataMap["alerts[$i][title]"] = alert["title"];
+        formDataMap["alerts[$i][risk]"] = alert["risk"];
+        formDataMap["alerts[$i][description]"] = alert["description"];
+        formDataMap["alerts[$i][student_id]"] = alert["student_id"];
+        formDataMap["alerts[$i][time]"] = alert["time"];
 
-    GetSnackBar(title: "Results sent successfully!");
-    Get.toNamed('/classes');
-    isLoading.value = false;
+        // Only add screenshot field if we have a valid MultipartFile
+        if (alert["screenshot_file"] != null &&
+            alert["screenshot_file"] is di.MultipartFile) {
+          formDataMap["alerts[$i][screenshot]"] = alert["screenshot_file"];
+          print('Added screenshot for alert $i');
+        } else {
+          print('No screenshot available for alert $i');
+        }
+      }
+
+      final formData = di.FormData.fromMap(formDataMap);
+
+      print('Sending ${alertsData.length} alerts with screenshots');
+
+      final response = await dio.post(
+        "${API_URL}store-alerts",
+        data: formData,
+        options: Options(
+          headers: {
+            'Accept': 'application/json',
+            'Authorization': 'Bearer ${token.value}',
+          },
+          validateStatus: (status) {
+            return status != null && status < 500;
+          },
+        ),
+      );
+
+      print('Response status: ${response.statusCode}');
+      print('Response data: ${response.data}');
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        isLoadingSend.value = false;
+        // Get.offAllNamed('/classes');
+        // Get.put(AppController());
+        Get.showSnackbar(
+          GetSnackBar(
+            title: "Success",
+            message: "Results sent successfully!",
+            duration: Duration(seconds: 2),
+            snackPosition: SnackPosition.BOTTOM,
+            backgroundColor: Colors.green,
+          ),
+        );
+
+      } else {
+        print('Upload failed with status: ${response.statusCode}');
+        Get.showSnackbar(
+          GetSnackBar(
+            title: "Error",
+            message: "Upload failed: ${response.data}",
+            duration: Duration(seconds: 3),
+            snackPosition: SnackPosition.BOTTOM,
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    } catch (error) {
+      isLoadingSend.value = false;
+      print('Error sending results: $error');
+      Get.showSnackbar(
+        GetSnackBar(
+          title: "Error",
+          message: "Failed to send results: $error",
+          duration: Duration(seconds: 3),
+          snackPosition: SnackPosition.BOTTOM,
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
+
+    isLoadingSend.value = false;
   }
-// catch (error) {
-//   isLoading.value = false;
-//
-//   GetSnackBar(title: "$error");
-// }
-// }
+
 
 }

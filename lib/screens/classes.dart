@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
 import '../getx/controller.dart';
+import '../models/alerts.dart';
 import '../widgets/customdrawer.dart';
 
 class Classes extends StatefulWidget {
@@ -30,6 +31,7 @@ class _ClassesState extends State<Classes> {
           Icon(Icons.radio_button_checked, color: Colors.green),
           InkWell(
             onTap: () {
+
               controller.getHome();
             },
             child: Obx(()=> Text('${controller.classesResponse.value.data.classes.length} Classes    ')),

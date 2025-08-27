@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
 import '../getx/controller.dart';
+import '../models/user-cache.dart';
 
 class CustomDrawer extends StatelessWidget {
   final Function(String) onItemTap;
@@ -26,7 +27,7 @@ class CustomDrawer extends StatelessWidget {
             decoration: const BoxDecoration(color: Colors.blue),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
-              children: const [
+              children: [
                 CircleAvatar(
                   radius: 28,
                   backgroundImage: AssetImage(
@@ -35,11 +36,12 @@ class CustomDrawer extends StatelessWidget {
                 ),
                 SizedBox(height: 10),
                 Text(
-                  "John Doe",
+                  // Obx(() => Text(());
+                  "Welcome ${UserCache.name ?? ''}",
                   style: TextStyle(fontSize: 18, color: Colors.white),
                 ),
                 Text(
-                  "johndoe@email.com",
+                  "${UserCache.email ?? ''}",
                   style: TextStyle(fontSize: 14, color: Colors.white70),
                 ),
               ],

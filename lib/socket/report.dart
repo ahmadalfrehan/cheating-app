@@ -78,9 +78,9 @@ class _PostExamReviewScreenState extends State<PostExamReviewScreen> {
           padding: const EdgeInsets.all(16),
           child:
           Obx(() {
-            print(controller.isLoading.value);
+            print(controller.isLoadingSend.value);
             return
-              // !controller.isLoading.value ? LinearProgressIndicator() :
+              controller.isLoadingSend.value ? LinearProgressIndicator() :
 
               ElevatedButton.icon(
                 label: const Text(

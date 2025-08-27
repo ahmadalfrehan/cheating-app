@@ -27,10 +27,14 @@ class Alert {
       screenshotUrl: json['screenshot_url'] ?? '',
       description: json['description'] ?? '',
       risk: json['risk'] ?? '',
-      timestamp: (json['timestamp'] ?? 0).toDouble(),
+
+      // timestamp: (json['timestamp'] ?? DateTime.now().millisecondsSinceEpoch.toDouble()).toDouble(),
+      timestamp: DateTime.now().millisecondsSinceEpoch.toDouble(),
     );
   }
 
+  // DateTime get dateTime => DateTime.parse((timestamp * 1000).toInt());
+
   DateTime get dateTime =>
-      DateTime.fromMillisecondsSinceEpoch((timestamp * 1000).toInt());
+      DateTime.fromMillisecondsSinceEpoch(timestamp.toInt());
 }

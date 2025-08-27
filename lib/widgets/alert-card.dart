@@ -62,7 +62,6 @@ class AlertCard extends StatelessWidget {
             title: Text(
               '${alert.pid} - ${alert.reason.replaceAll('_', ' ').toUpperCase()}',
               style: TextStyle(fontWeight: FontWeight.bold),
-
             ),
             subtitle: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
